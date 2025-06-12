@@ -1,5 +1,5 @@
 
-import { unstable_noStore as noStore } from 'next/cache';
+import { unstable_noStore as noStore, revalidatePath } from 'next/cache';
 import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory, Tenant, BuildingName } from './definitions';
 
 export const materialsMaster: MaterialMaster[] = [
@@ -141,6 +141,7 @@ export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'd
     tenant_id: complaint.tenant_id, 
   };
   complaintsData.push(newComplaint);
+  revalidatePath('/admin/dashboard'); // Revalidate dashboard if a new complaint is added
   return newComplaint;
 };
 
@@ -173,6 +174,9 @@ export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: Compla
       };
       complaintsData.push(duplicatedComplaint);
     }
+    // Revalidate paths after data modification
+    revalidatePath('/admin/dashboard');
+    revalidatePath(`/admin/complaints/${job.complaint_id}`);
   }
   return newJob;
 };

@@ -15,12 +15,14 @@ import type { Job, MaterialMaster, ComplaintStatus, MaterialUsed } from '@/lib/d
 import { complaintStatuses } from '@/lib/definitions';
 import { useToast } from "@/hooks/use-toast";
 import { getMaterialsMaster } from '@/lib/placeholder-data'; 
-import { updateJobAction } from '@/lib/actions'; // Use the Server Action
+import { updateJobAction } from '@/lib/actions'; 
 import { PlusCircle, Trash2, Save } from 'lucide-react';
+// No longer need useRouter here if parent handles refresh
+// import { useRouter } from 'next/navigation'; 
 
 const materialUsedSchema = z.object({
   code: z.string().min(1, "Material code is required"),
-  name: z.string().optional(), // Name will be auto-filled
+  name: z.string().optional(), 
   qty: z.coerce.number().min(1, "Quantity must be at least 1"),
 });
 
@@ -62,6 +64,7 @@ interface UpdateJobFormProps {
 export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFormProps) {
   const { toast } = useToast();
   const [materialsMaster, setMaterialsMaster] = useState<MaterialMaster[]>([]);
+  // const router = useRouter(); // Not needed if parent handles refresh
 
   const form = useForm<UpdateJobFormData>({
     resolver: zodResolver(formSchema),
@@ -118,13 +121,14 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
     };
 
     try {
-      await updateJobAction(jobData, values.status_update, values.reason_not_completed); // Call Server Action
+      await updateJobAction(jobData, values.status_update, values.reason_not_completed);
       toast({
         title: "Job Updated",
         description: `Job details for complaint ${complaintId} have been updated.`,
       });
       form.reset();
-      onJobUpdated(); 
+      onJobUpdated(); // Call the handler passed from the parent page
+      // router.refresh(); // Removed, parent page will handle router.refresh and its own state update
     } catch (error) {
         let errorMessage = "There was an error updating the job. Please try again.";
         if (error instanceof Error) {
@@ -283,4 +287,3 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
     </Card>
   );
 }
-

@@ -1,11 +1,11 @@
 
-"use client"; // Required because we use hooks like useState, useEffect, useParams
+"use client"; 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import UpdateJobForm from '@/components/forms/UpdateJobForm';
 import JobHistoryItem from '@/components/complaints/JobHistoryItem';
-import { getComplaintById } from '@/lib/placeholder-data'; // Simulated data fetching
+import { getComplaintByIdAction } from '@/lib/actions'; // Use the server action for fetching
 import type { Complaint, Job } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,11 +28,12 @@ export default function ComplaintDetailsPage() {
   const complaintId = params.id as string;
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const fetchComplaintDetails = useCallback(async () => {
     setLoading(true);
     if (complaintId) {
-      const data = await getComplaintById(complaintId);
+      const data = await getComplaintByIdAction(complaintId); // Call server action
       setComplaint(data || null);
     }
     setLoading(false);
@@ -40,7 +41,12 @@ export default function ComplaintDetailsPage() {
 
   useEffect(() => {
     fetchComplaintDetails();
-  }, [fetchComplaintDetails]);
+  }, [fetchComplaintDetails, refetchTrigger]); // Add refetchTrigger to dependencies
+
+  const handleJobUpdated = () => {
+    router.refresh(); // Refresh RSCs and server data for the route
+    setRefetchTrigger(prev => prev + 1); // Trigger client-side re-fetch of its own data
+  };
 
   if (loading) {
     return (
@@ -140,7 +146,7 @@ export default function ComplaintDetailsPage() {
         </div>
         
         {complaint.status !== 'Completed' && !complaint.duplicate_generated && (
-          <UpdateJobForm complaintId={complaint.id} onJobUpdated={fetchComplaintDetails} />
+          <UpdateJobForm complaintId={complaint.id} onJobUpdated={handleJobUpdated} />
         )}
          {complaint.status === 'Completed' && (
              <Card className="text-center py-8 bg-green-50 border-green-200">

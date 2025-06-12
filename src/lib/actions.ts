@@ -6,7 +6,8 @@ import type { Complaint, Job, ComplaintStatus, BuildingName } from './definition
 import {
   addComplaint as addComplaintData,
   addJob as addJobData,
-} from './placeholder-data'; // Assuming these are the data manipulation functions
+  getComplaintById as getComplaintByIdData, // Import the data fetching function
+} from './placeholder-data';
 
 // Server Action for creating a new complaint
 export async function createComplaintAction(
@@ -14,10 +15,9 @@ export async function createComplaintAction(
 ): Promise<Complaint> {
   const newComplaint = await addComplaintData(complaintData);
   
-  // Revalidate paths that might be affected
   revalidatePath('/admin/dashboard');
   if (complaintData.tenant_id) {
-    revalidatePath('/tenant/my-complaints'); // Or more specific path if tenants have unique complaint URLs
+    revalidatePath('/tenant/my-complaints');
   }
   
   return newComplaint;
@@ -27,17 +27,20 @@ export async function createComplaintAction(
 export async function updateJobAction(
   jobData: Omit<Job, 'id'>,
   complaintStatusUpdate: ComplaintStatus,
-  reasonIfNotCompleted?: string | null // Ensure this can be null if not provided
+  reasonIfNotCompleted?: string | null
 ): Promise<Job> {
   const updatedJob = await addJobData(jobData, complaintStatusUpdate, reasonIfNotCompleted || undefined);
   
-  // Revalidate paths
   revalidatePath('/admin/dashboard');
   revalidatePath(`/admin/complaints/${jobData.complaint_id}`);
-  
-  // Potentially revalidate tenant's view if their complaint status changed
-  // This might require fetching the complaint to get tenant_id if not directly available
   revalidatePath('/tenant/my-complaints'); 
   
   return updatedJob;
+}
+
+// Server Action for fetching a single complaint's details
+export async function getComplaintByIdAction(id: string): Promise<Complaint | null> {
+  // This function will run on the server and access the server-side placeholder data
+  const complaint = await getComplaintByIdData(id);
+  return complaint || null;
 }

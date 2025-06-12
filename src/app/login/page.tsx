@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loginIdentifier, setLoginIdentifier] = useState(''); // Email for admin, mobile for tenant
+  const [loginIdentifier, setLoginIdentifier] = useState(''); // Username for admin, mobile for tenant
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { toast } = useToast();
@@ -27,27 +28,23 @@ export default function LoginPage() {
     setError('');
 
     if (role === 'admin') {
-      // Admin login: for simplicity, using email.
-      // In a real app, you'd validate credentials against a backend.
-      // Example admin credentials, can be stored in .env or config
-      if (loginIdentifier === 'admin@example.com' && password === 'password') {
+      if (loginIdentifier === 'admin' && password === '123') {
         localStorage.setItem('userRole', role as string);
         router.push('/admin/dashboard');
       } else {
         setError('Invalid admin credentials.');
         toast({
           title: "Admin Login Failed",
-          description: "Invalid admin email or password.",
+          description: "Invalid admin username or password.",
           variant: "destructive",
         });
       }
     } else if (role === 'tenant') {
-      // Tenant login uses mobile number and password
       const tenant = await getTenantByMobileAndPassword(loginIdentifier, password);
       if (tenant) {
         localStorage.setItem('userRole', role as string);
-        localStorage.setItem('tenantId', tenant.id); // Store tenantId for future use
-        localStorage.setItem('tenantMobile', tenant.mobile_no); // Store mobile for pre-filling forms
+        localStorage.setItem('tenantId', tenant.id); 
+        localStorage.setItem('tenantMobile', tenant.mobile_no); 
         localStorage.setItem('tenantBuilding', tenant.building_name);
         localStorage.setItem('tenantFlat', tenant.room_no);
         router.push('/tenant/my-complaints');
@@ -75,11 +72,11 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="loginIdentifier">Email (Admin) / Mobile No. (Tenant)</Label>
+              <Label htmlFor="loginIdentifier">Username (Admin) / Mobile No. (Tenant)</Label>
               <Input
                 id="loginIdentifier"
                 type="text"
-                placeholder="admin@example.com or 555-123-4567"
+                placeholder="admin or 555-123-4567"
                 value={loginIdentifier}
                 onChange={(e) => setLoginIdentifier(e.target.value)}
                 required

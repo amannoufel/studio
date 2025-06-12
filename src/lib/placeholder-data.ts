@@ -1,3 +1,4 @@
+
 import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory, Tenant, BuildingName } from './definitions';
 
 export const materialsMaster: MaterialMaster[] = [
@@ -24,10 +25,10 @@ export const complaintsData: Complaint[] = [
     mobile_no: "555-0101",
     preferred_time: "10:00 - 11:00",
     category: "electrical",
-    description: "Main light in living room not working.",
+    description: "Main light in living room not working. (Sample for Admin)",
     status: "Pending",
     duplicate_generated: false,
-    tenant_id: "tenant1", // This would ideally map to a Tenant.id
+    // tenant_id removed so it doesn't appear for specific tenants on login
   },
   {
     id: `C${complaintIdCounter++}`,
@@ -37,10 +38,10 @@ export const complaintsData: Complaint[] = [
     mobile_no: "555-0205",
     preferred_time: "14:00 - 15:00",
     category: "plumbing",
-    description: "Kitchen sink is leaking.",
+    description: "Kitchen sink is leaking. (Sample for Admin)",
     status: "Attended",
     duplicate_generated: false,
-    tenant_id: "tenant2",
+    // tenant_id removed
   },
   {
     id: `C${complaintIdCounter++}`,
@@ -50,17 +51,17 @@ export const complaintsData: Complaint[] = [
     mobile_no: "555-0303",
     preferred_time: "09:00 - 10:00",
     category: "aircond",
-    description: "AC not cooling properly.",
+    description: "AC not cooling properly. (Sample for Admin)",
     status: "Completed",
     duplicate_generated: false,
-    tenant_id: "tenant1",
+    // tenant_id removed
   },
 ];
 
 export const jobsData: Job[] = [
   {
     id: `J${jobIdCounter++}`,
-    complaint_id: "C2", // Corresponds to Tower B, 205 plumbing issue
+    complaint_id: "C2", 
     date_attended: "2024-07-22",
     time_attended: "14:30",
     staff_attended: ["John Doe", "Jane Smith"],
@@ -74,7 +75,7 @@ export const jobsData: Job[] = [
   },
   {
     id: `J${jobIdCounter++}`,
-    complaint_id: "C3", // Corresponds to Tower A, 303 AC issue
+    complaint_id: "C3", 
     date_attended: "2024-07-22",
     time_attended: "10:00",
     staff_attended: ["Mike Brown"],
@@ -94,17 +95,14 @@ export const addTenant = async (tenantData: Omit<Tenant, 'id' | 'password_hash'>
     mobile_no: tenantData.mobile_no,
     building_name: tenantData.building_name,
     room_no: tenantData.room_no,
-    // IMPORTANT: In a real app, hash the password securely.
-    // Storing raw password (even named password_hash) is a major security risk.
-    password_hash: tenantData.password_raw,
+    password_hash: tenantData.password_raw, // In a real app, HASH THIS SECURELY
   };
   tenantsData.push(newTenant);
   return newTenant;
 };
 
 export const getTenantByMobileAndPassword = async (mobile_no: string, password_raw: string): Promise<Tenant | undefined> => {
-  // IMPORTANT: In a real app, compare hashed passwords. This is insecure.
-  return tenantsData.find(t => t.mobile_no === mobile_no && t.password_hash === password_raw);
+  return tenantsData.find(t => t.mobile_no === mobile_no && t.password_hash === password_raw); // In a real app, compare HASHED passwords
 };
 
 
@@ -133,8 +131,8 @@ export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'd
     id: `C${complaintIdCounter++}`,
     status: "Pending",
     duplicate_generated: false,
-    date_registered: new Date().toISOString().split('T')[0], // Set current date
-    // tenant_id: complaint.tenant_id, // Ensure tenant_id is passed through
+    date_registered: new Date().toISOString().split('T')[0], 
+    tenant_id: complaint.tenant_id, 
   };
   complaintsData.push(newComplaint);
   return newComplaint;
@@ -152,7 +150,6 @@ export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: Compla
     complaintsData[complaintIndex].status = complaintStatusUpdate;
     if (complaintStatusUpdate === "Not Completed" || complaintStatusUpdate === "Tenant Not Available") {
       complaintsData[complaintIndex].duplicate_generated = true;
-      // Simulate duplication
       const originalComplaint = complaintsData[complaintIndex];
       const duplicatedComplaint: Complaint = {
         id: `C${complaintIdCounter++}`,
@@ -162,7 +159,7 @@ export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: Compla
         mobile_no: originalComplaint.mobile_no,
         preferred_time: originalComplaint.preferred_time,
         category: originalComplaint.category,
-        description: `(Duplicated) ${originalComplaint.description}`,
+        description: `(Duplicated from ${originalComplaint.id}) ${originalComplaint.description} - Reason: ${reasonIfNotCompleted || 'Tenant not available/Not completed'}`,
         status: "Pending",
         duplicate_generated: false,
         tenant_id: originalComplaint.tenant_id,

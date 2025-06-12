@@ -1,25 +1,23 @@
 
 "use client";
-import React, { useEffect } from 'react'; // Added useEffect
-import { useForm, Controller } from 'react-hook-form';
+import React from 'react'; // Removed useEffect as it's no longer needed for pre-filling
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Input might be removable if no other inputs use it. Keeping for now.
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { complaintCategories, preferredTimeSlots, buildingNames } from '@/lib/definitions'; // Added buildingNames
-import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; // Added BuildingName
+import { complaintCategories, preferredTimeSlots } from '@/lib/definitions'; // Removed buildingNames
+import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; // BuildingName type is still used
 import { useToast } from "@/hooks/use-toast";
 import { addComplaint } from '@/lib/placeholder-data';
 import { useRouter } from 'next/navigation';
 
+// Updated formSchema: removed bldg_name, flat_no, mobile_no
 const formSchema = z.object({
-  bldg_name: z.enum(buildingNames, {required_error: "Building name is required"}),
-  flat_no: z.string().min(1, "Flat number is required"),
-  mobile_no: z.string().min(1, "Mobile number is required").regex(/^\d{3}-\d{3}-\d{4}$/, "Invalid phone format (e.g., 555-123-4567)"),
   preferred_time: z.string().min(1, "Preferred time slot is required"),
   category: z.enum(complaintCategories, {required_error: "Category is required"}),
   description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
@@ -32,36 +30,39 @@ export default function NewComplaintForm() {
   const router = useRouter();
   const form = useForm<NewComplaintFormData>({
     resolver: zodResolver(formSchema),
+    // Updated defaultValues
     defaultValues: {
-      bldg_name: undefined,
-      flat_no: '',
-      mobile_no: '',
       preferred_time: '',
       category: undefined,
       description: '',
     },
   });
 
-  useEffect(() => {
-    // Pre-fill from localStorage if available
-    const tenantMobile = localStorage.getItem('tenantMobile');
-    const tenantBuilding = localStorage.getItem('tenantBuilding') as BuildingName | null;
-    const tenantFlat = localStorage.getItem('tenantFlat');
-
-    if (tenantMobile) form.setValue('mobile_no', tenantMobile);
-    if (tenantBuilding && buildingNames.includes(tenantBuilding)) {
-      form.setValue('bldg_name', tenantBuilding);
-    }
-    if (tenantFlat) form.setValue('flat_no', tenantFlat);
-  }, [form]);
-
+  // Removed useEffect for pre-filling bldg_name, flat_no, mobile_no as these fields are gone from the form
 
   async function onSubmit(values: NewComplaintFormData) {
     try {
       const tenantId = localStorage.getItem('tenantId');
+      const tenantMobile = localStorage.getItem('tenantMobile');
+      const tenantBuilding = localStorage.getItem('tenantBuilding') as BuildingName | null;
+      const tenantFlat = localStorage.getItem('tenantFlat');
+
+      if (!tenantMobile || !tenantBuilding || !tenantFlat) {
+        toast({
+          title: "Submission Failed",
+          description: "Tenant details not found. Please log in again.",
+          variant: "destructive",
+        });
+        // Optionally, redirect to login or handle error more gracefully
+        // router.push('/login');
+        return;
+      }
+
       const newComplaintData: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & {tenant_id?: string} = {
-        ...values,
-        bldg_name: values.bldg_name, // Already correct type from schema
+        ...values, // Contains preferred_time, category, description
+        bldg_name: tenantBuilding, // Get from localStorage
+        flat_no: tenantFlat,       // Get from localStorage
+        mobile_no: tenantMobile,   // Get from localStorage
         tenant_id: tenantId || undefined, 
       };
       
@@ -71,10 +72,8 @@ export default function NewComplaintForm() {
         title: "Complaint Submitted",
         description: `Your complaint (ID: ${createdComplaint.id}) has been successfully submitted.`,
       });
-      form.reset( { // Reset with potentially new localStorage values if they signed up & logged in
-        mobile_no: localStorage.getItem('tenantMobile') || '',
-        bldg_name: (localStorage.getItem('tenantBuilding') as BuildingName) || undefined,
-        flat_no: localStorage.getItem('tenantFlat') || '',
+      // Updated form.reset
+      form.reset({
         preferred_time: '',
         category: undefined,
         description: '',
@@ -93,63 +92,13 @@ export default function NewComplaintForm() {
     <Card className="w-full max-w-2xl mx-auto shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Submit New Complaint</CardTitle>
-        <CardDescription>Please fill in the details of your maintenance request.</CardDescription>
+        <CardDescription>Please fill in the details of your maintenance request. Your building, flat, and mobile number are automatically included.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="bldg_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Building Name</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select building" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {buildingNames.map(name => (
-                          <SelectItem key={name} value={name}>{name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="flat_no"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Flat Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 101" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Removed FormFields for bldg_name, flat_no, and mobile_no */}
             
-            <FormField
-              control={form.control}
-              name="mobile_no"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 555-123-4567" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}

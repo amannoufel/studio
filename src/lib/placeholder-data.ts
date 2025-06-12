@@ -1,4 +1,4 @@
-import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory } from './definitions';
+import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory, Tenant, BuildingName } from './definitions';
 
 export const materialsMaster: MaterialMaster[] = [
   { code: "MAT001", name: "Wire 2.5mm (meter)" },
@@ -11,6 +11,9 @@ export const materialsMaster: MaterialMaster[] = [
 
 let complaintIdCounter = 1;
 let jobIdCounter = 1;
+let tenantIdCounter = 1;
+
+export let tenantsData: Tenant[] = [];
 
 export const complaintsData: Complaint[] = [
   {
@@ -24,7 +27,7 @@ export const complaintsData: Complaint[] = [
     description: "Main light in living room not working.",
     status: "Pending",
     duplicate_generated: false,
-    tenant_id: "tenant1",
+    tenant_id: "tenant1", // This would ideally map to a Tenant.id
   },
   {
     id: `C${complaintIdCounter++}`,
@@ -84,7 +87,28 @@ export const jobsData: Job[] = [
   },
 ];
 
-// Functions to interact with placeholder data (simulating API/DB)
+// Tenant Data Functions
+export const addTenant = async (tenantData: Omit<Tenant, 'id' | 'password_hash'> & { password_raw: string }): Promise<Tenant> => {
+  const newTenant: Tenant = {
+    id: `T${tenantIdCounter++}`,
+    mobile_no: tenantData.mobile_no,
+    building_name: tenantData.building_name,
+    room_no: tenantData.room_no,
+    // IMPORTANT: In a real app, hash the password securely.
+    // Storing raw password (even named password_hash) is a major security risk.
+    password_hash: tenantData.password_raw,
+  };
+  tenantsData.push(newTenant);
+  return newTenant;
+};
+
+export const getTenantByMobileAndPassword = async (mobile_no: string, password_raw: string): Promise<Tenant | undefined> => {
+  // IMPORTANT: In a real app, compare hashed passwords. This is insecure.
+  return tenantsData.find(t => t.mobile_no === mobile_no && t.password_hash === password_raw);
+};
+
+
+// Complaint and Job Functions
 export const getComplaints = async (): Promise<Complaint[]> => {
   return complaintsData.map(c => ({
     ...c,
@@ -103,13 +127,14 @@ export const getComplaintById = async (id: string): Promise<Complaint | undefine
   return undefined;
 };
 
-export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status'>): Promise<Complaint> => {
+export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & {tenant_id?: string}): Promise<Complaint> => {
   const newComplaint: Complaint = {
     ...complaint,
     id: `C${complaintIdCounter++}`,
     status: "Pending",
     duplicate_generated: false,
     date_registered: new Date().toISOString().split('T')[0], // Set current date
+    // tenant_id: complaint.tenant_id, // Ensure tenant_id is passed through
   };
   complaintsData.push(newComplaint);
   return newComplaint;

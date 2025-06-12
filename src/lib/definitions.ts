@@ -2,6 +2,9 @@ export type ComplaintCategory = "electrical" | "plumbing" | "aircond";
 export type ComplaintStatus = "Pending" | "Attended" | "Completed" | "Not Completed" | "Tenant Not Available";
 export type UserRole = "tenant" | "admin" | null;
 
+export type BuildingName = "Tower A" | "Tower B" | "Tower C";
+export const buildingNames: BuildingName[] = ["Tower A", "Tower B", "Tower C"];
+
 export interface Complaint {
   id: string;
   date_registered: string; // ISO date string
@@ -39,6 +42,15 @@ export interface MaterialMaster {
   code: string;
   name: string;
 }
+
+export interface Tenant {
+  id: string;
+  mobile_no: string;
+  building_name: BuildingName;
+  room_no: string;
+  password_hash: string; // In a real app, this would be a securely hashed password
+}
+
 
 export const complaintCategories: ComplaintCategory[] = ["electrical", "plumbing", "aircond"];
 export const complaintStatuses: ComplaintStatus[] = ["Pending", "Attended", "Completed", "Not Completed", "Tenant Not Available"];

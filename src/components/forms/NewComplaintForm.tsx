@@ -1,5 +1,6 @@
+
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react'; // Added useEffect
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,18 +10,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { complaintCategories, preferredTimeSlots } from '@/lib/definitions';
-import type { Complaint } from '@/lib/definitions';
+import { complaintCategories, preferredTimeSlots, buildingNames } from '@/lib/definitions'; // Added buildingNames
+import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; // Added BuildingName
 import { useToast } from "@/hooks/use-toast";
-import { addComplaint } from '@/lib/placeholder-data'; // Simulated action
+import { addComplaint } from '@/lib/placeholder-data';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  bldg_name: z.string().min(1, "Building name is required"),
+  bldg_name: z.enum(buildingNames, {required_error: "Building name is required"}),
   flat_no: z.string().min(1, "Flat number is required"),
   mobile_no: z.string().min(1, "Mobile number is required").regex(/^\d{3}-\d{3}-\d{4}$/, "Invalid phone format (e.g., 555-123-4567)"),
   preferred_time: z.string().min(1, "Preferred time slot is required"),
-  category: z.enum(complaintCategories),
+  category: z.enum(complaintCategories, {required_error: "Category is required"}),
   description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
 });
 
@@ -32,31 +33,52 @@ export default function NewComplaintForm() {
   const form = useForm<NewComplaintFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      bldg_name: '',
+      bldg_name: undefined,
       flat_no: '',
       mobile_no: '',
       preferred_time: '',
-      category: 'electrical',
+      category: undefined,
       description: '',
     },
   });
 
+  useEffect(() => {
+    // Pre-fill from localStorage if available
+    const tenantMobile = localStorage.getItem('tenantMobile');
+    const tenantBuilding = localStorage.getItem('tenantBuilding') as BuildingName | null;
+    const tenantFlat = localStorage.getItem('tenantFlat');
+
+    if (tenantMobile) form.setValue('mobile_no', tenantMobile);
+    if (tenantBuilding && buildingNames.includes(tenantBuilding)) {
+      form.setValue('bldg_name', tenantBuilding);
+    }
+    if (tenantFlat) form.setValue('flat_no', tenantFlat);
+  }, [form]);
+
+
   async function onSubmit(values: NewComplaintFormData) {
     try {
-      // In a real app, this would be a server action or API call
-      // For now, using placeholder data function
-      const newComplaintData: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> = {
+      const tenantId = localStorage.getItem('tenantId');
+      const newComplaintData: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & {tenant_id?: string} = {
         ...values,
-        // tenant_id would be set based on logged-in user
+        bldg_name: values.bldg_name, // Already correct type from schema
+        tenant_id: tenantId || undefined, 
       };
-      // @ts-ignore // date_registered will be set by addComplaint
+      
       const createdComplaint = await addComplaint(newComplaintData); 
       
       toast({
         title: "Complaint Submitted",
         description: `Your complaint (ID: ${createdComplaint.id}) has been successfully submitted.`,
       });
-      form.reset();
+      form.reset( { // Reset with potentially new localStorage values if they signed up & logged in
+        mobile_no: localStorage.getItem('tenantMobile') || '',
+        bldg_name: (localStorage.getItem('tenantBuilding') as BuildingName) || undefined,
+        flat_no: localStorage.getItem('tenantFlat') || '',
+        preferred_time: '',
+        category: undefined,
+        description: '',
+      });
       router.push('/tenant/my-complaints');
     } catch (error) {
       toast({
@@ -83,9 +105,18 @@ export default function NewComplaintForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Building Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Tower A" {...field} />
-                    </FormControl>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select building" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {buildingNames.map(name => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -126,7 +157,7 @@ export default function NewComplaintForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Preferred Time Slot</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a time slot" />
@@ -148,7 +179,7 @@ export default function NewComplaintForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />

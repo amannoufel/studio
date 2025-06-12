@@ -6,35 +6,65 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import MainLayout from '@/components/layout/MainLayout';
-import { LogIn, Wrench } from 'lucide-react';
+import { LogIn, UserPlus, Wrench } from 'lucide-react';
+import Link from 'next/link';
 import type { UserRole } from '@/lib/definitions';
+import { getTenantByMobileAndPassword } from '@/lib/placeholder-data';
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState(''); // Email for admin, mobile for tenant
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { toast } = useToast();
 
-  const handleLogin = (role: UserRole) => {
-    if (!email || !password) {
-      setError('Please enter email and password.');
+  const handleLogin = async (role: UserRole) => {
+    if (!loginIdentifier || !password) {
+      setError('Please enter your credentials.');
       return;
     }
     setError('');
-    // Stubbed login:
-    // In a real app, you'd validate credentials against a backend.
-    // For this stub, we'll just set the role and redirect.
-    localStorage.setItem('userRole', role as string);
+
     if (role === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
-      router.push('/tenant/my-complaints');
+      // Admin login: for simplicity, using email.
+      // In a real app, you'd validate credentials against a backend.
+      // Example admin credentials, can be stored in .env or config
+      if (loginIdentifier === 'admin@example.com' && password === 'password') {
+        localStorage.setItem('userRole', role as string);
+        router.push('/admin/dashboard');
+      } else {
+        setError('Invalid admin credentials.');
+        toast({
+          title: "Admin Login Failed",
+          description: "Invalid admin email or password.",
+          variant: "destructive",
+        });
+      }
+    } else if (role === 'tenant') {
+      // Tenant login uses mobile number and password
+      const tenant = await getTenantByMobileAndPassword(loginIdentifier, password);
+      if (tenant) {
+        localStorage.setItem('userRole', role as string);
+        localStorage.setItem('tenantId', tenant.id); // Store tenantId for future use
+        localStorage.setItem('tenantMobile', tenant.mobile_no); // Store mobile for pre-filling forms
+        localStorage.setItem('tenantBuilding', tenant.building_name);
+        localStorage.setItem('tenantFlat', tenant.room_no);
+        router.push('/tenant/my-complaints');
+      } else {
+        setError('Invalid mobile number or password.');
+        toast({
+          title: "Tenant Login Failed",
+          description: "Invalid mobile number or password. Please try again or sign up.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   return (
-    <MainLayout initialUserRole={null}> {/* Pass null so layout knows not to expect a role yet */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+    <MainLayout initialUserRole={null}>
+      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-8">
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
@@ -45,13 +75,13 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="loginIdentifier">Email (Admin) / Mobile No. (Tenant)</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="loginIdentifier"
+                type="text"
+                placeholder="admin@example.com or 555-123-4567"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
                 required
               />
             </div>
@@ -68,8 +98,7 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">For demonstration purposes:</p>
+          <CardFooter className="flex flex-col gap-4 pt-6">
             <div className="flex gap-2 w-full">
               <Button onClick={() => handleLogin('tenant')} className="flex-1" variant="outline">
                 <LogIn className="mr-2 h-4 w-4" /> Login as Tenant
@@ -78,6 +107,12 @@ export default function LoginPage() {
                 <LogIn className="mr-2 h-4 w-4" /> Login as Admin
               </Button>
             </div>
+            <p className="text-sm text-center text-muted-foreground">
+              Tenant and don't have an account?{' '}
+              <Link href="/signup" className="font-medium text-primary hover:underline inline-flex items-center">
+                 <UserPlus className="mr-1 h-4 w-4" /> Sign Up
+              </Link>
+            </p>
           </CardFooter>
         </Card>
       </div>

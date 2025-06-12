@@ -1,3 +1,4 @@
+
 "use client"; // Required because we use hooks like useState, useEffect, useParams
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -8,9 +9,10 @@ import { getComplaintById } from '@/lib/placeholder-data'; // Simulated data fet
 import type { Complaint, Job } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, ArrowLeft, CalendarDays, ClipboardList, Info, ListChecks, Phone, Tag, User, Hash, Clock } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarDays, ClipboardList, Info, ListChecks, Phone, Tag, User, Hash, Clock, CheckCircle2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 const statusStyles: Record<Complaint['status'], string> = {
   Pending: "bg-yellow-500 hover:bg-yellow-600",

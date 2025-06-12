@@ -1,7 +1,8 @@
+
 import type { Job } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, CalendarDays, Clock, Users, ListOrdered, Tool } from 'lucide-react';
+import { Briefcase, CalendarDays, Clock, Users, ListOrdered, Info } from 'lucide-react';
 
 interface JobHistoryItemProps {
   job: Job;
@@ -45,7 +46,7 @@ export default function JobHistoryItem({ job }: JobHistoryItemProps) {
         )}
         {job.reason_not_completed && (
           <div>
-            <h4 className="font-medium text-sm flex items-center"><Tool className="mr-2 h-4 w-4 text-muted-foreground" />Reason Not Completed:</h4>
+            <h4 className="font-medium text-sm flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />Reason Not Completed:</h4>
             <p className="text-sm italic">{job.reason_not_completed}</p>
           </div>
         )}

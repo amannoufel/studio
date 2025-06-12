@@ -1,22 +1,20 @@
 
 "use client";
-import React from 'react'; // Removed useEffect as it's no longer needed for pre-filling
+import React from 'react'; 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Input might be removable if no other inputs use it. Keeping for now.
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { complaintCategories, preferredTimeSlots } from '@/lib/definitions'; // Removed buildingNames
-import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; // BuildingName type is still used
+import { complaintCategories, preferredTimeSlots } from '@/lib/definitions'; 
+import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; 
 import { useToast } from "@/hooks/use-toast";
-import { addComplaint } from '@/lib/placeholder-data';
+import { createComplaintAction } from '@/lib/actions'; // Use the Server Action
 import { useRouter } from 'next/navigation';
 
-// Updated formSchema: removed bldg_name, flat_no, mobile_no
 const formSchema = z.object({
   preferred_time: z.string().min(1, "Preferred time slot is required"),
   category: z.enum(complaintCategories, {required_error: "Category is required"}),
@@ -30,15 +28,12 @@ export default function NewComplaintForm() {
   const router = useRouter();
   const form = useForm<NewComplaintFormData>({
     resolver: zodResolver(formSchema),
-    // Updated defaultValues
     defaultValues: {
       preferred_time: '',
       category: undefined,
       description: '',
     },
   });
-
-  // Removed useEffect for pre-filling bldg_name, flat_no, mobile_no as these fields are gone from the form
 
   async function onSubmit(values: NewComplaintFormData) {
     try {
@@ -47,32 +42,29 @@ export default function NewComplaintForm() {
       const tenantBuilding = localStorage.getItem('tenantBuilding') as BuildingName | null;
       const tenantFlat = localStorage.getItem('tenantFlat');
 
-      if (!tenantMobile || !tenantBuilding || !tenantFlat) {
+      if (!tenantMobile || !tenantBuilding || !tenantFlat || !tenantId) {
         toast({
           title: "Submission Failed",
           description: "Tenant details not found. Please log in again.",
           variant: "destructive",
         });
-        // Optionally, redirect to login or handle error more gracefully
-        // router.push('/login');
         return;
       }
 
       const newComplaintData: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & {tenant_id?: string} = {
-        ...values, // Contains preferred_time, category, description
-        bldg_name: tenantBuilding, // Get from localStorage
-        flat_no: tenantFlat,       // Get from localStorage
-        mobile_no: tenantMobile,   // Get from localStorage
-        tenant_id: tenantId || undefined, 
+        ...values, 
+        bldg_name: tenantBuilding, 
+        flat_no: tenantFlat,       
+        mobile_no: tenantMobile,   
+        tenant_id: tenantId, 
       };
       
-      const createdComplaint = await addComplaint(newComplaintData); 
+      const createdComplaint = await createComplaintAction(newComplaintData); // Call Server Action
       
       toast({
         title: "Complaint Submitted",
         description: `Your complaint (ID: ${createdComplaint.id}) has been successfully submitted.`,
       });
-      // Updated form.reset
       form.reset({
         preferred_time: '',
         category: undefined,
@@ -80,11 +72,15 @@ export default function NewComplaintForm() {
       });
       router.push('/tenant/my-complaints');
     } catch (error) {
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your complaint. Please try again.",
-        variant: "destructive",
-      });
+        let errorMessage = "There was an error submitting your complaint. Please try again.";
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        toast({
+            title: "Submission Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
     }
   }
 
@@ -97,7 +93,6 @@ export default function NewComplaintForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Removed FormFields for bldg_name, flat_no, and mobile_no */}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
@@ -164,7 +159,9 @@ export default function NewComplaintForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full md:w-auto">Submit Complaint</Button>
+            <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Submitting..." : "Submit Complaint"}
+            </Button>
           </form>
         </Form>
       </CardContent>

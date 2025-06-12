@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
@@ -13,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import type { Job, MaterialMaster, ComplaintStatus, MaterialUsed } from '@/lib/definitions';
 import { complaintStatuses } from '@/lib/definitions';
 import { useToast } from "@/hooks/use-toast";
-import { addJob, getMaterialsMaster } from '@/lib/placeholder-data'; // Simulated action
+import { getMaterialsMaster } from '@/lib/placeholder-data'; 
+import { updateJobAction } from '@/lib/actions'; // Use the Server Action
 import { PlusCircle, Trash2, Save } from 'lucide-react';
 
 const materialUsedSchema = z.object({
@@ -23,12 +25,12 @@ const materialUsedSchema = z.object({
 });
 
 const formSchema = z.object({
-  date_attended: z.string().min(1, "Date attended is required"), // Should be date type in real scenario
-  time_attended: z.string().min(1, "Time attended is required"), // Should be time type
+  date_attended: z.string().min(1, "Date attended is required"), 
+  time_attended: z.string().min(1, "Time attended is required"), 
   staff_attended: z.array(z.string().min(1, "Staff name cannot be empty")).min(1, "At least one staff member is required"),
   job_card_no: z.string().min(1, "Job card number is required"),
   materials_used: z.array(materialUsedSchema),
-  status_update: z.enum(complaintStatuses.filter(s => s !== "Pending") as [ComplaintStatus, ...ComplaintStatus[]]), // Status after job
+  status_update: z.enum(complaintStatuses.filter(s => s !== "Pending") as [ComplaintStatus, ...ComplaintStatus[]]), 
   time_completed: z.string().optional(),
   reason_not_completed: z.string().optional(),
 }).refine(data => {
@@ -54,7 +56,7 @@ type UpdateJobFormData = z.infer<typeof formSchema>;
 
 interface UpdateJobFormProps {
   complaintId: string;
-  onJobUpdated: () => void; // Callback to refresh data
+  onJobUpdated: () => void; 
 }
 
 export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFormProps) {
@@ -116,19 +118,23 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
     };
 
     try {
-      await addJob(jobData, values.status_update, values.reason_not_completed);
+      await updateJobAction(jobData, values.status_update, values.reason_not_completed); // Call Server Action
       toast({
         title: "Job Updated",
         description: `Job details for complaint ${complaintId} have been updated.`,
       });
       form.reset();
-      onJobUpdated(); // Trigger data refresh on parent
+      onJobUpdated(); 
     } catch (error) {
-      toast({
-        title: "Update Failed",
-        description: "There was an error updating the job. Please try again.",
-        variant: "destructive",
-      });
+        let errorMessage = "There was an error updating the job. Please try again.";
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        toast({
+            title: "Update Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
     }
   }
 
@@ -181,6 +187,7 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
+                      <FormMessage>{form.formState.errors.staff_attended?.[index]?.message}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -188,7 +195,7 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
               <Button type="button" variant="outline" size="sm" onClick={() => appendStaff('')} className="mt-2">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Staff
               </Button>
-               <FormMessage>{form.formState.errors.staff_attended?.message}</FormMessage>
+               <FormMessage>{form.formState.errors.staff_attended?.root?.message || form.formState.errors.staff_attended?.message}</FormMessage>
             </div>
             
             <div>
@@ -267,8 +274,8 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
               )} />
             )}
             
-            <Button type="submit" className="w-full md:w-auto">
-                <Save className="mr-2 h-4 w-4" /> Update Job
+            <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Updating..." : <><Save className="mr-2 h-4 w-4" /> Update Job</>}
             </Button>
           </form>
         </Form>
@@ -276,3 +283,4 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
     </Card>
   );
 }
+

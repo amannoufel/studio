@@ -1,5 +1,5 @@
 
-import { unstable_noStore as noStore, revalidatePath } from 'next/cache';
+import { unstable_noStore as noStore } from 'next/cache';
 import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory, Tenant, BuildingName } from './definitions';
 
 export const materialsMaster: MaterialMaster[] = [
@@ -111,7 +111,7 @@ export const getTenantByMobileAndPassword = async (mobile_no: string, password_r
 
 // Complaint and Job Functions
 export const getComplaints = async (): Promise<Complaint[]> => {
-  noStore(); // Opt out of static generation or caching for this data
+  noStore(); 
   return complaintsData.map(c => ({
     ...c,
     jobs: jobsData.filter(j => j.complaint_id === c.id)
@@ -119,7 +119,7 @@ export const getComplaints = async (): Promise<Complaint[]> => {
 };
 
 export const getComplaintById = async (id: string): Promise<Complaint | undefined> => {
-  noStore(); // Opt out of static generation or caching for this data
+  noStore(); 
   const complaint = complaintsData.find(c => c.id === id);
   if (complaint) {
     return {
@@ -141,7 +141,6 @@ export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'd
     tenant_id: complaint.tenant_id, 
   };
   complaintsData.push(newComplaint);
-  revalidatePath('/admin/dashboard'); // Revalidate dashboard if a new complaint is added
   return newComplaint;
 };
 
@@ -174,9 +173,6 @@ export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: Compla
       };
       complaintsData.push(duplicatedComplaint);
     }
-    // Revalidate paths after data modification
-    revalidatePath('/admin/dashboard');
-    revalidatePath(`/admin/complaints/${job.complaint_id}`);
   }
   return newJob;
 };
@@ -185,4 +181,3 @@ export const getMaterialsMaster = async (): Promise<MaterialMaster[]> => {
   noStore();
   return materialsMaster;
 };
-

@@ -1,4 +1,5 @@
 
+import { unstable_noStore as noStore } from 'next/cache';
 import type { Complaint, Job, MaterialMaster, ComplaintStatus, ComplaintCategory, Tenant, BuildingName } from './definitions';
 
 export const materialsMaster: MaterialMaster[] = [
@@ -90,6 +91,7 @@ export const jobsData: Job[] = [
 
 // Tenant Data Functions
 export const addTenant = async (tenantData: Omit<Tenant, 'id' | 'password_hash'> & { password_raw: string }): Promise<Tenant> => {
+  noStore();
   const newTenant: Tenant = {
     id: `T${tenantIdCounter++}`,
     mobile_no: tenantData.mobile_no,
@@ -102,12 +104,14 @@ export const addTenant = async (tenantData: Omit<Tenant, 'id' | 'password_hash'>
 };
 
 export const getTenantByMobileAndPassword = async (mobile_no: string, password_raw: string): Promise<Tenant | undefined> => {
+  noStore();
   return tenantsData.find(t => t.mobile_no === mobile_no && t.password_hash === password_raw); // In a real app, compare HASHED passwords
 };
 
 
 // Complaint and Job Functions
 export const getComplaints = async (): Promise<Complaint[]> => {
+  noStore(); // Opt out of static generation or caching for this data
   return complaintsData.map(c => ({
     ...c,
     jobs: jobsData.filter(j => j.complaint_id === c.id)
@@ -115,6 +119,7 @@ export const getComplaints = async (): Promise<Complaint[]> => {
 };
 
 export const getComplaintById = async (id: string): Promise<Complaint | undefined> => {
+  noStore(); // Opt out of static generation or caching for this data
   const complaint = complaintsData.find(c => c.id === id);
   if (complaint) {
     return {
@@ -126,6 +131,7 @@ export const getComplaintById = async (id: string): Promise<Complaint | undefine
 };
 
 export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & {tenant_id?: string}): Promise<Complaint> => {
+  noStore();
   const newComplaint: Complaint = {
     ...complaint,
     id: `C${complaintIdCounter++}`,
@@ -139,6 +145,7 @@ export const addComplaint = async (complaint: Omit<Complaint, 'id' | 'jobs' | 'd
 };
 
 export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: ComplaintStatus, reasonIfNotCompleted?: string): Promise<Job> => {
+  noStore();
   const newJob: Job = {
     ...job,
     id: `J${jobIdCounter++}`,
@@ -171,5 +178,7 @@ export const addJob = async (job: Omit<Job, 'id'>, complaintStatusUpdate: Compla
 };
 
 export const getMaterialsMaster = async (): Promise<MaterialMaster[]> => {
+  noStore();
   return materialsMaster;
 };
+

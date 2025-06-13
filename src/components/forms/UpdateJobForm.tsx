@@ -14,8 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import type { Job, MaterialMaster, ComplaintStatus, MaterialUsed } from '@/lib/definitions';
 import { complaintStatuses } from '@/lib/definitions';
 import { useToast } from "@/hooks/use-toast";
-import { getMaterialsMaster } from '@/lib/placeholder-data'; 
-import { updateJobAction } from '@/lib/actions'; 
+import { updateJobAction, getMaterialMasterAction } from '@/lib/actions'; 
 import { PlusCircle, Trash2, Save } from 'lucide-react';
 // No longer need useRouter here if parent handles refresh
 // import { useRouter } from 'next/navigation'; 
@@ -92,9 +91,8 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
   
   const watchedStatusUpdate = form.watch("status_update");
 
-  useEffect(() => {
-    async function fetchMaterials() {
-      const materials = await getMaterialsMaster();
+  useEffect(() => {    async function fetchMaterials() {
+      const materials = await getMaterialMasterAction();
       setMaterialsMaster(materials);
     }
     fetchMaterials();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import ComplaintCard from '@/components/complaints/ComplaintCard';
-import { getComplaints } from '@/lib/placeholder-data'; 
+import { getTenantComplaintsAction } from '@/lib/actions';
 import type { Complaint } from '@/lib/definitions';
 import { AlertCircle, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,13 +40,11 @@ export default function MyComplaintsPage() {
         // tenantId is still being fetched from localStorage, wait.
         return;
     }
-
-
     async function fetchComplaints() {
       setLoading(true);
-      const allComplaints = await getComplaints();
       if (tenantId) {
-        setMyComplaints(allComplaints.filter(c => c.tenant_id === tenantId));
+        const complaints = await getTenantComplaintsAction(tenantId);
+        setMyComplaints(complaints);
       } else {
         // If tenantId is not found (e.g., user is not a tenant or error in login)
         setMyComplaints([]);

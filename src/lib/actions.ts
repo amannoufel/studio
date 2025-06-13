@@ -1,8 +1,7 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { Complaint, Job, ComplaintStatus, Tenant, BuildingName } from './definitions';
+import type { Complaint, Job, ComplaintStatus, Tenant, BuildingName, MaterialMaster } from './definitions';
 import {
   addTenantService,
   getTenantByMobileAndPasswordService,
@@ -10,6 +9,7 @@ import {
   getComplaintByIdService,
   addComplaintService,
   addJobService,
+  getMaterialMasterService,
 } from './supabaseService'; // Import from Supabase service
 
 // --- Tenant Actions ---
@@ -44,8 +44,7 @@ export async function getComplaintsAction(): Promise<Complaint[]> {
 }
 
 export async function getTenantComplaintsAction(tenantId: string): Promise<Complaint[]> {
-  const allComplaints = await getComplaintsService();
-  return allComplaints.filter(c => c.tenant_id === tenantId);
+  return await getComplaintsService(tenantId);
 }
 
 export async function getComplaintByIdAction(id: string): Promise<Complaint | null> {
@@ -64,4 +63,10 @@ export async function updateJobAction(
   revalidatePath(`/admin/complaints/${jobData.complaint_id}`);
   revalidatePath('/tenant/my-complaints');
   return updatedJob;
+}
+
+// --- Material Actions ---
+export async function getMaterialMasterAction(): Promise<MaterialMaster[]> {
+  const materials = await getMaterialMasterService();
+  return materials;
 }

@@ -14,7 +14,7 @@ import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { addTenant } from '@/lib/placeholder-data';
+import { createTenantAction } from '@/lib/actions';
 import { buildingNames } from '@/lib/definitions';
 import type { BuildingName } from '@/lib/definitions';
 
@@ -46,8 +46,7 @@ export default function SignUpPage() {
   });
 
   async function onSubmit(values: SignUpFormData) {
-    try {
-      await addTenant({
+    try {      await createTenantAction({
         mobile_no: values.mobile_no,
         building_name: values.building_name as BuildingName, // Cast as BuildingName
         room_no: values.room_no,

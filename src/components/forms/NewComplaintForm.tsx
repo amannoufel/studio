@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { complaintCategories, preferredTimeSlots } from '@/lib/definitions'; 
 import type { Complaint, ComplaintCategory, BuildingName } from '@/lib/definitions'; 
 import { useToast } from "@/hooks/use-toast";
-import { createComplaintAction } from '@/lib/actions'; // Use the Server Action
+import { createComplaintAction } from '@/lib/actions';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
@@ -139,9 +139,7 @@ export default function NewComplaintForm() {
                   </FormItem>
                 )}
               />
-            </div>
-
-            <FormField
+            </div>            <FormField
               control={form.control}
               name="description"
               render={({ field }) => (

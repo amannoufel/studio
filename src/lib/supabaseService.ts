@@ -1,6 +1,5 @@
-
 import { supabase } from './supabaseClient';
-import type { Tenant, Complaint, Job, ComplaintStatus, BuildingName, MaterialUsed } from './definitions';
+import type { Tenant, Complaint, Job, ComplaintStatus, BuildingName, MaterialUsed, MaterialMaster } from './definitions';
 
 // --- Tenant Functions ---
 
@@ -49,19 +48,27 @@ export async function getTenantByMobileAndPasswordService(
 
 // --- Complaint Functions ---
 
-export async function getComplaintsService(): Promise<Complaint[]> {
-  const { data: complaints, error: complaintsError } = await supabase
+export async function getComplaintsService(tenantId?: string): Promise<Complaint[]> {
+  let query = supabase
     .from('complaints')
     .select(`
       *,
       jobs (*)
     `)
-    .order('created_at', { ascending: false });
+    .order('date_registered', { ascending: false });
+
+  // If tenantId is provided, filter by it
+  if (tenantId) {
+    query = query.eq('tenant_id', tenantId);
+  }
+
+  const { data: complaints, error: complaintsError } = await query;
 
   if (complaintsError) {
     console.error('Error fetching complaints:', complaintsError);
     throw new Error(`Error fetching complaints: ${complaintsError.message}`);
   }
+
   return (complaints as Complaint[] || []).map(c => ({
     ...c,
     // Ensure date_registered is in 'YYYY-MM-DD' if Supabase returns full timestamp
@@ -218,4 +225,30 @@ export async function addJobService(
     ...createdJob,
     date_attended: createdJob.date_attended ? new Date(createdJob.date_attended).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   } as Job;
+}
+
+// --- Material Functions ---
+export async function getMaterialMasterService(): Promise<MaterialMaster[]> {
+  try {
+    const { data, error } = await supabase
+      .from('materials')
+      .select('*')
+      .order('code');
+    
+    if (error) {
+      // If table doesn't exist, use fallback data
+      if (error.message.includes('does not exist')) {
+        console.log('Materials table not found, using fallback data');
+        const { materialsMaster } = await import('./data/materials');
+        return materialsMaster;
+      }
+      throw error;
+    }
+
+    return data as MaterialMaster[];
+  } catch (error) {
+    console.log('Error fetching materials, using fallback data:', error);
+    const { materialsMaster } = await import('./data/materials');
+    return materialsMaster;
+  }
 }

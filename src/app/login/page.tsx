@@ -10,7 +10,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import { LogIn, UserPlus, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import type { UserRole } from '@/lib/definitions';
-import { getTenantByMobileAndPassword } from '@/lib/placeholder-data';
+import { loginTenantAction } from '@/lib/actions';
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
@@ -40,7 +40,7 @@ export default function LoginPage() {
         });
       }
     } else if (role === 'tenant') {
-      const tenant = await getTenantByMobileAndPassword(loginIdentifier, password);
+      const tenant = await loginTenantAction(loginIdentifier, password);
       if (tenant) {
         localStorage.setItem('userRole', role as string);
         localStorage.setItem('tenantId', tenant.id); 

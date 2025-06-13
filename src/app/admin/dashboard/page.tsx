@@ -1,10 +1,10 @@
 import MainLayout from '@/components/layout/MainLayout';
 import ComplaintTable from '@/components/complaints/ComplaintTable';
-import { getComplaints } from '@/lib/placeholder-data'; // Simulated data fetching
+import { getComplaintsAction } from '@/lib/actions';
 import { FileText } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
-  const complaints = await getComplaints();
+  const complaints = await getComplaintsAction();
 
   return (
     <MainLayout initialUserRole="admin">

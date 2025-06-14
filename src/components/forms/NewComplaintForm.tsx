@@ -18,8 +18,6 @@ const formSchema = z.object({
   preferred_time: z.string().min(1, "Preferred time slot is required"),
   category: z.enum(complaintCategories, {required_error: "Category is required"}),
   description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
-  staff: z.string().min(1, "Staff member selection is required"),
-  store: z.string().min(1, "Store selection is required"),
 });
 
 type NewComplaintFormData = z.infer<typeof formSchema>;
@@ -27,14 +25,10 @@ type NewComplaintFormData = z.infer<typeof formSchema>;
 export default function NewComplaintForm() {
   const { toast } = useToast();
   const router = useRouter();
-  const form = useForm<NewComplaintFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const form = useForm<NewComplaintFormData>({    resolver: zodResolver(formSchema),    defaultValues: {
       preferred_time: '',
       category: undefined,
       description: '',
-      staff: '',
-      store: 'Main Store', // Set default store
     },
   });
 
@@ -67,13 +61,10 @@ export default function NewComplaintForm() {
       toast({
         title: "Complaint Submitted",
         description: `Your complaint (ID: ${createdComplaint.id}) has been successfully submitted.`,
-      });
-      form.reset({
+      });      form.reset({
         preferred_time: '',
         category: undefined,
         description: '',
-        staff: '',
-        store: 'Main Store',
       });
       router.push('/tenant/my-complaints');
     } catch (error) {
@@ -147,50 +138,6 @@ export default function NewComplaintForm() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="store"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Store</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a store" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {storeLocations.map(store => (
-                          <SelectItem key={store} value={store}>{store}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="staff"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Staff Member</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select staff member" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {staffMembers.map(staff => (
-                          <SelectItem key={staff} value={staff}>{staff}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <FormField

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { Complaint, Job, ComplaintStatus, Tenant, BuildingName, MaterialMaster } from './definitions';
+import type { Complaint, Job, ComplaintStatus, Tenant, BuildingName, MaterialMaster, Staff } from './definitions';
 import {
   addTenantService,
   getTenantByMobileAndPasswordService,
@@ -10,7 +10,9 @@ import {
   addComplaintService,
   addJobService,
   getMaterialMasterService,
+  getStaffService,
 } from './supabaseService'; // Import from Supabase service
+import { supabase } from './supabaseClient';
 
 // --- Tenant Actions ---
 export async function createTenantAction(
@@ -67,7 +69,36 @@ export async function updateJobAction(
 
 // --- Material Actions ---
 export async function getMaterialMasterAction(): Promise<MaterialMaster[]> {
-  // Importing from the static data for now
-  const { materialsMaster } = await import('./data/materials');
-  return materialsMaster;
+  try {
+    const { data, error } = await supabase
+      .from('materials')
+      .select('*')
+      .order('code');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching materials:', error);
+    return [];
+  }
+}
+
+export async function getMaterials(){
+  try {
+    const { data, error } = await supabase
+      .from('materials')
+      .select('*')
+      .order('code');
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching materials:', error);
+    return [];
+  }
+}
+
+// --- Staff Actions ---
+export async function getStaffAction(): Promise<Staff[]> {
+  return await getStaffService();
 }

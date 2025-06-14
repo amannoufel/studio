@@ -16,10 +16,9 @@ export interface Complaint {
   description: string;
   status: ComplaintStatus;
   duplicate_generated: boolean;
-  tenant_id?: string; // Optional: Link to a tenant user
-  jobs?: Job[];
-  staff: string; // Staff member assigned
-  store: string; // Store location
+  tenant_id?: string; // Optional: Link to a tenant user  jobs?: Job[];
+  staff?: string; // Staff member assigned (admin only)
+  store?: string; // Store location (admin only)
 }
 
 export interface MaterialUsed {
@@ -51,6 +50,13 @@ export interface Tenant {
   building_name: BuildingName;
   room_no: string;
   password_hash: string; // In a real app, this would be a securely hashed password
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+  designation?: string;
+  active: boolean;
 }
 
 export const complaintCategories: ComplaintCategory[] = ["electrical", "plumbing", "aircond"];

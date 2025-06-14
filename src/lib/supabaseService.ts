@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Tenant, Complaint, Job, ComplaintStatus, BuildingName, MaterialUsed, MaterialMaster } from './definitions';
+import type { Tenant, Complaint, Job, ComplaintStatus, BuildingName, MaterialUsed, MaterialMaster, Staff } from './definitions';
 
 // --- Tenant Functions ---
 
@@ -109,13 +109,12 @@ export async function getComplaintByIdService(id: string): Promise<Complaint | n
 
 export async function addComplaintService(
   complaint: Omit<Complaint, 'id' | 'jobs' | 'duplicate_generated' | 'status' | 'date_registered'> & { tenant_id?: string }
-): Promise<Complaint> {
-  const newComplaintData = {
+): Promise<Complaint> {  const newComplaintData = {
     ...complaint,
     status: 'Pending' as ComplaintStatus,
     duplicate_generated: false,
     date_registered: new Date().toISOString().split('T')[0], // YYYY-MM-DD format for DATE type
-    tenant_id: complaint.tenant_id || null,
+    tenant_id: complaint.tenant_id || null
   };
 
   const { data, error } = await supabase
@@ -235,20 +234,26 @@ export async function getMaterialMasterService(): Promise<MaterialMaster[]> {
       .select('*')
       .order('code');
     
-    if (error) {
-      // If table doesn't exist, use fallback data
-      if (error.message.includes('does not exist')) {
-        console.log('Materials table not found, using fallback data');
-        const { materialsMaster } = await import('./data/materials');
-        return materialsMaster;
-      }
-      throw error;
-    }
+    if (error) throw error;
+    return data as MaterialMaster[];} catch (error) {
+    console.log('Error fetching materials:', error);
+    return [];
+  }
+}
 
-    return data as MaterialMaster[];
+// --- Staff Functions ---
+export async function getStaffService(): Promise<Staff[]> {
+  try {
+    const { data, error } = await supabase
+      .from('staff')
+      .select('*')
+      .eq('active', true)
+      .order('name');
+    
+    if (error) throw error;
+    return data as Staff[];
   } catch (error) {
-    console.log('Error fetching materials, using fallback data:', error);
-    const { materialsMaster } = await import('./data/materials');
-    return materialsMaster;
+    console.error('Error fetching staff:', error);
+    return [];
   }
 }

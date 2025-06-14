@@ -19,7 +19,7 @@ import { PlusCircle, Trash2, Save } from 'lucide-react';
 // No longer need useRouter here if parent handles refresh
 // import { useRouter } from 'next/navigation'; 
 
-const staffMembers = ["Staff A", "Staff B", "Staff C"];
+import { StaffSelect } from './StaffSelect';
 
 const materialUsedSchema = z.object({
   code: z.string().min(1, "Material code is required"),
@@ -200,19 +200,13 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
                   control={form.control}
                   name={`staff_attended.${index}`}
                   render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 mt-1">
-                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select staff member" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {staffMembers.map(staff => (
-                            <SelectItem key={staff} value={staff}>{staff}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="flex items-center gap-2 mt-1">                      <FormControl>
+                        <StaffSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select staff member"
+                        />
+                      </FormControl>
                       {staffFields.length > 1 && (
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeStaff(index)}>
                           <Trash2 className="h-4 w-4 text-destructive" />

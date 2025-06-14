@@ -67,6 +67,7 @@ export async function updateJobAction(
 
 // --- Material Actions ---
 export async function getMaterialMasterAction(): Promise<MaterialMaster[]> {
-  const materials = await getMaterialMasterService();
-  return materials;
+  // Importing from the static data for now
+  const { materialsMaster } = await import('./data/materials');
+  return materialsMaster;
 }

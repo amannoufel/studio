@@ -18,6 +18,8 @@ export interface Complaint {
   duplicate_generated: boolean;
   tenant_id?: string; // Optional: Link to a tenant user
   jobs?: Job[];
+  staff: string; // Staff member assigned
+  store: string; // Store location
 }
 
 export interface MaterialUsed {
@@ -51,7 +53,6 @@ export interface Tenant {
   password_hash: string; // In a real app, this would be a securely hashed password
 }
 
-
 export const complaintCategories: ComplaintCategory[] = ["electrical", "plumbing", "aircond"];
 export const complaintStatuses: ComplaintStatus[] = ["Pending", "Attended", "Completed", "Not Completed", "Tenant Not Available"];
 export const preferredTimeSlots: string[] = [
@@ -59,3 +60,6 @@ export const preferredTimeSlots: string[] = [
   "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00",
   "16:00 - 17:00", "17:00 - 18:00"
 ];
+
+export const staffMembers: string[] = ["Staff A", "Staff B", "Staff C"];
+export const storeLocations: string[] = ["Main Store", "Store A", "Store B", "Store C"];

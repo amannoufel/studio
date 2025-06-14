@@ -93,13 +93,29 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
   });
   
   const watchedStatusUpdate = form.watch("status_update");
-
-  useEffect(() => {    async function fetchMaterials() {
-      const materials = await getMaterialMasterAction();
-      setMaterialsMaster(materials);
+  useEffect(() => {
+    async function fetchMaterials() {
+      try {
+        const materials = await getMaterialMasterAction();
+        setMaterialsMaster(materials || []);
+        // If we have empty materials list
+        if (!materials || materials.length === 0) {
+          toast({
+            title: "Warning",
+            description: "No materials found in the system.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load materials list.",
+          variant: "destructive",
+        });
+      }
     }
     fetchMaterials();
-  }, []);
+  }, [toast]);
 
   const handleMaterialCodeChange = (index: number, code: string) => {
     const material = materialsMaster.find(m => m.code === code);
@@ -264,10 +280,19 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => appendMaterial({ code: '', qty: 1 })} className="mt-2">
+              ))}              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => appendMaterial({ code: '', name: '', qty: 1 })} 
+                className="mt-2"
+                disabled={materialsMaster.length === 0}
+              >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Material
               </Button>
+              {materialsMaster.length === 0 && (
+                <p className="text-sm text-muted-foreground mt-2">Loading materials...</p>
+              )}
             </div>
 
             <FormField control={form.control} name="status_update" render={({ field }) => (

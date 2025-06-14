@@ -19,6 +19,8 @@ import { PlusCircle, Trash2, Save } from 'lucide-react';
 // No longer need useRouter here if parent handles refresh
 // import { useRouter } from 'next/navigation'; 
 
+const staffMembers = ["Staff A", "Staff B", "Staff C"];
+
 const materialUsedSchema = z.object({
   code: z.string().min(1, "Material code is required"),
   name: z.string().optional(), 
@@ -30,6 +32,7 @@ const formSchema = z.object({
   time_attended: z.string().min(1, "Time attended is required"), 
   staff_attended: z.array(z.string().min(1, "Staff name cannot be empty")).min(1, "At least one staff member is required"),
   job_card_no: z.string().min(1, "Job card number is required"),
+  store: z.string().min(1, "Store is required"),
   materials_used: z.array(materialUsedSchema),
   status_update: z.enum(complaintStatuses.filter(s => s !== "Pending") as [ComplaintStatus, ...ComplaintStatus[]]), 
   time_completed: z.string().optional(),
@@ -66,12 +69,12 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
   // const router = useRouter(); // Not needed if parent handles refresh
 
   const form = useForm<UpdateJobFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+    resolver: zodResolver(formSchema),    defaultValues: {
       date_attended: new Date().toISOString().split('T')[0],
       time_attended: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
       staff_attended: [''],
       job_card_no: '',
+      store: 'Main Store',
       materials_used: [],
       status_update: 'Attended',
       time_completed: '',
@@ -174,8 +177,7 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
               </FormItem>
             )} />
             
-            <div>
-              <FormLabel>Staff Attended</FormLabel>
+            <div>              <FormLabel>Staff Attended</FormLabel>
               {staffFields.map((field, index) => (
                 <FormField
                   key={field.id}
@@ -183,7 +185,18 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
                   name={`staff_attended.${index}`}
                   render={({ field }) => (
                     <FormItem className="flex items-center gap-2 mt-1">
-                      <FormControl><Input placeholder="Staff Name" {...field} /></FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select staff member" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {staffMembers.map(staff => (
+                            <SelectItem key={staff} value={staff}>{staff}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {staffFields.length > 1 && (
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeStaff(index)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -197,9 +210,27 @@ export default function UpdateJobForm({ complaintId, onJobUpdated }: UpdateJobFo
               <Button type="button" variant="outline" size="sm" onClick={() => appendStaff('')} className="mt-2">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Staff
               </Button>
-               <FormMessage>{form.formState.errors.staff_attended?.root?.message || form.formState.errors.staff_attended?.message}</FormMessage>
+              <FormMessage>{form.formState.errors.staff_attended?.root?.message || form.formState.errors.staff_attended?.message}</FormMessage>
             </div>
-            
+              <FormField control={form.control} name="store" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Store</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select store" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Main Store">Main Store</SelectItem>
+                    <SelectItem value="Store 1">Store 1</SelectItem>
+                    <SelectItem value="Store 2">Store 2</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+
             <div>
               <FormLabel>Materials Used</FormLabel>
               {materialFields.map((field, index) => (

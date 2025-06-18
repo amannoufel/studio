@@ -28,9 +28,15 @@ const adminNavItems = [
   { href: '/admin/settings', label: 'Settings', icon: Settings }, // Example, not implemented
 ];
 
+const supervisorNavItems = [
+  { href: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+];
+
 export default function AppSidebar({ userRole }: AppSidebarProps) {
   const pathname = usePathname();
-  const navItems = userRole === 'admin' ? adminNavItems : tenantNavItems;
+  let navItems = tenantNavItems;
+  if (userRole === 'admin') navItems = adminNavItems;
+  else if (userRole === 'supervisor') navItems = supervisorNavItems;
 
   if (!userRole) return null;
 

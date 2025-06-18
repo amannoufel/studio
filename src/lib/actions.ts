@@ -11,6 +11,7 @@ import {
   addJobService,
   getMaterialMasterService,
   getStaffService,
+  setJobApproved,
 } from './supabaseService'; // Import from Supabase service
 import { supabase } from './supabaseClient';
 
@@ -65,6 +66,11 @@ export async function updateJobAction(
   revalidatePath(`/admin/complaints/${jobData.complaint_id}`);
   revalidatePath('/tenant/my-complaints');
   return updatedJob;
+}
+
+export async function approveJobAction(jobId: string): Promise<void> {
+  await setJobApproved(jobId, true);
+  revalidatePath('/supervisor/dashboard');
 }
 
 // --- Material Actions ---

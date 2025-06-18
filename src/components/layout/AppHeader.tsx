@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AppHeaderProps {
-  userRole: 'tenant' | 'admin' | null;
+  userRole: 'tenant' | 'admin' | 'supervisor' | null;
   onLogout: () => void;
 }
 

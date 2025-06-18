@@ -1,6 +1,6 @@
 export type ComplaintCategory = "electrical" | "plumbing" | "aircond";
 export type ComplaintStatus = "Pending" | "Attended" | "Completed" | "Not Completed" | "Tenant Not Available";
-export type UserRole = "tenant" | "admin" | null;
+export type UserRole = "tenant" | "admin" | "supervisor" | null;
 
 export type BuildingName = "Tower A" | "Tower B" | "Tower C";
 export const buildingNames: BuildingName[] = ["Tower A", "Tower B", "Tower C"];
@@ -16,7 +16,8 @@ export interface Complaint {
   description: string;
   status: ComplaintStatus;
   duplicate_generated: boolean;
-  tenant_id?: string; // Optional: Link to a tenant user  jobs?: Job[];
+  tenant_id?: string; // Optional: Link to a tenant user
+  jobs?: Job[];
   staff?: string; // Staff member assigned (admin only)
   store?: string; // Store location (admin only)
 }
@@ -37,6 +38,7 @@ export interface Job {
   materials_used: MaterialUsed[];
   time_completed?: string | null; // HH:mm
   reason_not_completed?: string | null;
+  approved?: boolean;
 }
 
 export interface MaterialMaster {

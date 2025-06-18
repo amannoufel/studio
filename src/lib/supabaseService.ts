@@ -226,6 +226,16 @@ export async function addJobService(
   } as Job;
 }
 
+export async function setJobApproved(jobId: string, approved: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('jobs')
+    .update({ approved })
+    .eq('id', jobId);
+  if (error) {
+    throw new Error(`Error updating job approval: ${error.message}`);
+  }
+}
+
 // --- Material Functions ---
 export async function getMaterialMasterService(): Promise<MaterialMaster[]> {
   try {

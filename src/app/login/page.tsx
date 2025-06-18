@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,6 +55,18 @@ export default function LoginPage() {
           variant: "destructive",
         });
       }
+    } else if (role === 'supervisor') {
+      if (loginIdentifier === 'superviser' && password === '123') {
+        localStorage.setItem('userRole', role as string);
+        router.push('/supervisor/dashboard');
+      } else {
+        setError('Invalid supervisor credentials.');
+        toast({
+          title: "Supervisor Login Failed",
+          description: "Invalid supervisor username or password.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -102,6 +113,9 @@ export default function LoginPage() {
               </Button>
               <Button onClick={() => handleLogin('admin')} className="flex-1">
                 <LogIn className="mr-2 h-4 w-4" /> Login as Admin
+              </Button>
+              <Button onClick={() => handleLogin('supervisor')} className="flex-1" variant="secondary">
+                <LogIn className="mr-2 h-4 w-4" /> Login as Supervisor
               </Button>
             </div>
             <p className="text-sm text-center text-muted-foreground">

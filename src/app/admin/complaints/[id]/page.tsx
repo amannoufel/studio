@@ -1,4 +1,3 @@
-
 "use client"; 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -121,6 +120,17 @@ export default function ComplaintDetailsPage() {
             <div className="md:col-span-2 lg:col-span-3">
                  <InfoItem icon={Info} label="Description" value={complaint.description} isFullWidth />
             </div>
+            {complaint.image_url && (
+              <div className="md:col-span-2 lg:col-span-3 flex flex-col items-start mt-2">
+                <span className="font-medium text-muted-foreground mb-1">Uploaded Photo:</span>
+                <img
+                  src={complaint.image_url}
+                  alt="Complaint Upload"
+                  className="rounded border max-w-xs max-h-64 object-contain bg-white shadow"
+                  style={{ marginTop: 4 }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -20,6 +20,7 @@ export interface Complaint {
   jobs?: Job[];
   staff?: string; // Staff member assigned (admin only)
   store?: string; // Store location (admin only)
+  image_url?: string; // Add image_url for complaint image
 }
 
 export interface MaterialUsed {
